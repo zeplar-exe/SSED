@@ -83,7 +83,17 @@ namespace SSED_Tests
                 var testString = $"BeginContent\n{content}\nEndContent";
 
                 var stream = PageParser.Parse(testString);
-                Assert.True(stream.Content.Elements[1].ToString() == bold);
+                Assert.True(stream.Content.Elements[1].GetType() == typeof(BoldText));
+            }
+
+            [Test]
+            public void TestHtml()
+            {
+                var content = "Some plain text and some B^(bold text). I'll throw in I^(italics) too!";
+                var testString = $"BeginContent\n{content}\nEndContent";
+
+                var stream = PageParser.Parse(testString);
+                Console.WriteLine(stream.ToHtml());
             }
         }
     }

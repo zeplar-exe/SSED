@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Text;
+using System.Xml.Linq;
 using Jammo.ParserTools;
 
 namespace SSED
@@ -34,6 +36,33 @@ namespace SSED
         public void Dispose()
         {
             stream?.Dispose();
+        }
+
+        public HtmlDocument ToHtml()
+        {
+            var builder = new HtmlBuilder();
+            
+            builder.StartElement("<meta>");
+            
+            builder.StartElement("<title>");
+            builder.CurrentElement.TextContent = Title;
+            builder.EndElement("</title>");
+            
+            builder.EndElement("</meta>");
+            
+            
+            builder.StartElement("<body>");
+            builder.StartElement("<p>");
+
+            foreach (var element in Content.Elements)
+            {
+                builder.AppendElement(element.ToHtmlElement());
+            }
+            
+            builder.EndElement("</p>");
+            builder.EndElement("</body>");
+
+            return builder.ToDocument();
         }
     }
 }

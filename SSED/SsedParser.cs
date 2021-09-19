@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Jammo.ParserTools;
@@ -11,7 +12,7 @@ namespace SSED
             var stream = new SsedDocument();
             var state = new StateMachine<ParserState>(ParserState.Text);
             var tokenizer = new Tokenizer(input);
-            var preceeding = new LinkedList<BasicToken>();
+            var preceding = new LinkedList<BasicToken>();
 
             SsedElement textElement = new PlainText();
 
@@ -40,7 +41,7 @@ namespace SSED
                     }
                     case ParserState.SpecialItem:
                     {
-                        var prefix = preceeding.Last?.Previous;
+                        var prefix = preceding.First;
 
                         if (prefix == null)
                         {
@@ -74,8 +75,11 @@ namespace SSED
                             else
                             {
                                 if (specialToken.Text == ")" && !isEscaping)
+                                {
+                                    state.MoveLast();
                                     break;
-                                
+                                }
+
                                 element.Feed(specialToken);
                             }
                         }
@@ -86,7 +90,7 @@ namespace SSED
                     }
                 }
                 
-                preceeding.AddFirst(token);
+                preceding.AddFirst(token);
             }
             
             if (!string.IsNullOrEmpty(textElement.ToString()))
@@ -101,39 +105,4 @@ namespace SSED
             SpecialItem
         }
     }
-
-    public abstract class SsedElement
-    {
-        protected string RawText = string.Empty;
-
-        internal static SsedElement FromPrefix(string prefix)
-        {
-            return prefix switch
-            {
-                "B" => new BoldText(),
-                "I" => new ItalicText(),
-                "U" => new UnderlinedText(),
-                _ => new PlainText()
-            };
-        }
-        
-        internal virtual void Feed(BasicToken text)
-        {
-            RawText += text.Text;
-        }
-
-        public override string ToString()
-        {
-            return RawText;
-        }
-    }
-
-    public class PlainText : SsedElement
-    {
-        
-    }
-    
-    public class BoldText : SsedElement { }
-    public class ItalicText : SsedElement { }
-    public class UnderlinedText : SsedElement { }
 }
