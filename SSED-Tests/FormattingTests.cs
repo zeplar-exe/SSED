@@ -6,7 +6,7 @@ using SSED;
 namespace SSED_Tests
 {
     [TestFixture]
-    public class Tests
+    public class FormattingTests
     {
         [TestFixture]
         public class SiteTests
@@ -72,11 +72,12 @@ namespace SSED_Tests
                 var testString = $"BeginContent\n{content}\nEndContent";
 
                 var stream = PageParser.Parse(testString);
+                Console.WriteLine(stream.Content.Elements.First().ToString());
                 Assert.True(stream.Content.Elements.First().ToString().Trim() == content);
             }
 
             [Test]
-            public void TestSpecialText()
+            public void TestBoldText()
             {
                 var bold = "bold text";
                 var content = $"Some plain text and some B^({bold}).";
@@ -85,15 +86,16 @@ namespace SSED_Tests
                 var stream = PageParser.Parse(testString);
                 Assert.True(stream.Content.Elements[1].GetType() == typeof(BoldText));
             }
-
+            
             [Test]
-            public void TestHtml()
+            public void TestUnderlinedText()
             {
-                var content = "Some plain text and some B^(bold text). I'll throw in I^(italics) too!";
+                var important = "important text";
+                var content = $"Some B^(bold) text and some U^({important}).";
                 var testString = $"BeginContent\n{content}\nEndContent";
 
                 var stream = PageParser.Parse(testString);
-                Console.WriteLine(stream.ToHtml());
+                Assert.True(stream.Content.Elements[3].GetType() == typeof(UnderlinedText));
             }
         }
     }

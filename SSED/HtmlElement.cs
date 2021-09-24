@@ -7,6 +7,8 @@ namespace SSED
     {
         public string OpeningTag;
         public string ClosingTag;
+
+        public bool UseNewlines = true;
         
         public string TextContent;
         public readonly List<HtmlElement> Content = new();
@@ -15,16 +17,29 @@ namespace SSED
         {
             var builder = new StringBuilder();
 
-            builder.AppendLine(OpeningTag);
+            builder.Append(OpeningTag);
+
+            if (UseNewlines)
+                builder.AppendLine();
 
             if (TextContent == null)
             {
                 foreach (var element in Content)
-                    builder.AppendLine(element.ToHtml());
+                {
+                    builder.Append(element.ToHtml());
+
+                    if (UseNewlines)
+                        builder.AppendLine();
+                }
             }
             else
-                builder.AppendLine(TextContent);
-            
+            {
+                builder.Append(TextContent);
+                
+                if (UseNewlines)
+                    builder.AppendLine();
+            }
+
             builder.Append(ClosingTag);
 
             return builder.ToString();

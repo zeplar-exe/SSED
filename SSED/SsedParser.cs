@@ -11,20 +11,22 @@ namespace SSED
         {
             var stream = new SsedDocument();
             var state = new StateMachine<ParserState>(ParserState.Text);
-            var tokenizer = new Tokenizer(input);
-            var preceding = new LinkedList<BasicToken>();
+            var lexer = new Lexer(new Tokenizer(input));
+            var preceding = new LinkedList<LexerToken>();
 
             SsedElement textElement = new PlainText();
 
-            foreach (var token in tokenizer)
+            foreach (var token in lexer)
             {
                 switch (state.Current)
                 {
                     case ParserState.Text:
                     {
-                        if (token.Type is BasicTokenType.Alphabetical or BasicTokenType.Numerical)
+                        if (token.Is(LexerTokenId.Alphabetic) || 
+                            token.Is(LexerTokenId.AlphaNumeric) ||
+                            token.Is(LexerTokenId.Numeric))
                         {
-                            if (tokenizer.PeekNext().Text == "^")
+                            if (lexer.PeekNext().Is(LexerTokenId.Caret))
                             {
                                 state.MoveTo(ParserState.SpecialItem);
                                 stream.Elements.Add(textElement);
@@ -35,13 +37,23 @@ namespace SSED
                             }
                         }
 
+                        if (token.Is(LexerTokenId.NewLine))
+                        {
+                            stream.Elements.Add(textElement);
+                            stream.Elements.Add(new LineBreak());
+
+                            textElement = new PlainText();
+                                
+                            break;
+                        }
+
                         textElement.Feed(token);
                         
                         break;
                     }
                     case ParserState.SpecialItem:
                     {
-                        var prefix = preceding.First;
+                        var prefix = preceding.First?.Value.Token.Text;
 
                         if (prefix == null)
                         {
@@ -49,18 +61,18 @@ namespace SSED
                             break;
                         }
 
-                        if (tokenizer.Next().Text != "(")
+                        if (!lexer.Next().Is(LexerTokenId.LeftParenthesis))
                         {
                             state.MoveLast();
                             break;
                         }
 
-                        var element = SsedElement.FromPrefix(prefix.Value.Text);
+                        var element = SsedElement.FromPrefix(prefix);
 
                         var isEscaping = false;
-                        foreach (var specialToken in tokenizer)
+                        foreach (var specialToken in lexer)
                         {
-                            if (specialToken.Text == "\\")
+                            if (specialToken.Is(LexerTokenId.Backslash))
                             {
                                 if (isEscaping)
                                 {
@@ -74,11 +86,13 @@ namespace SSED
                             }
                             else
                             {
-                                if (specialToken.Text == ")" && !isEscaping)
+                                if (specialToken.Is(LexerTokenId.RightParenthesis) && !isEscaping)
                                 {
                                     state.MoveLast();
                                     break;
                                 }
+                                
+                                isEscaping = false;
 
                                 element.Feed(specialToken);
                             }

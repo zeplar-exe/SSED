@@ -43,11 +43,14 @@ namespace SSED
             var builder = new HtmlBuilder();
             
             builder.StartElement("<meta>");
-            
-            builder.StartElement("<title>");
-            builder.CurrentElement.TextContent = Title;
-            builder.EndElement("</title>");
-            
+
+            if (Title != null)
+            {
+                builder.StartElement("<title>");
+                builder.CurrentElement.TextContent = Title;
+                builder.EndElement("</title>");
+            }
+
             builder.EndElement("</meta>");
             
             

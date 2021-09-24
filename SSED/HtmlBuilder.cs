@@ -13,7 +13,7 @@ namespace SSED
 
         public HtmlBuilder()
         {
-            root = new HtmlElement { OpeningTag = "<html>", ClosingTag = "</html>" };
+            root = new HtmlElement { OpeningTag = "<html>", ClosingTag = "</html>", UseNewlines = true};
             navigator = new Navigator<HtmlElement>(root);
         }
 
