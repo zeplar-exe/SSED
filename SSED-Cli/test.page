@@ -1,5 +1,3 @@
 BeginContent
-B^(Some bold) text
-Italics go I^(WOOOOOOOOOOOOOOOOOO) and then suddenly stop
-U^(This text) is important
+EMB^(header="Interesting title" text="Hello world!" headercolor="yellow" contentcolor="yellow")
 EndContent

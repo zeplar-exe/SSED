@@ -11,9 +11,9 @@ namespace SSED
 
         public HtmlElement CurrentElement => navigator.Current;
 
-        public HtmlBuilder()
+        public HtmlBuilder(HtmlElement root)
         {
-            root = new HtmlElement { OpeningTag = "<html>", ClosingTag = "</html>", UseNewlines = true};
+            this.root = root;
             navigator = new Navigator<HtmlElement>(root);
         }
 
@@ -33,12 +33,6 @@ namespace SSED
 
         public void EndElement()
         {
-            var index = CurrentElement.OpeningTag.IndexOf('<');
-            
-            if (index == -1)
-                return;
-            
-            CurrentElement.ClosingTag = CurrentElement.OpeningTag.Insert(index + 1, "/");
             navigator.MoveLast();
         }
 
@@ -61,7 +55,7 @@ namespace SSED
 
             public TItem Current;
 
-            public Navigator(TItem start)
+            public Navigator(TItem start = default)
             {
                 Current = start;
             }

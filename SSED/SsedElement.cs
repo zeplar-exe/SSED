@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Jammo.ParserTools;
 
 namespace SSED
@@ -90,7 +91,42 @@ namespace SSED
     {
         public override HtmlElement ToHtmlElement()
         {
-            throw new NotImplementedException();
+            var builder = new HtmlBuilder(new HtmlElement { OpeningTag = "div" });
+
+            builder.StartElement("div");
+            builder.CurrentElement.Attributes.Add("height", "40");
+            builder.CurrentElement.Attributes.Add("width", "50%");
+
+            var styleBuilder = new StringBuilder();
+            // TODO: Create Style and StyleBuilder, grab styles using recursion
+
+            if (Parameters.TryGetValue("headercolor", out string headerColor))
+                styleBuilder.Append($"background-color:{headerColor};");
+
+            styleBuilder.Append("margin:10;");
+            
+            builder.CurrentElement.Attributes.Add("style", styleBuilder.ToString());
+            
+            if (Parameters.TryGetValue("header", out var header))
+                builder.CurrentElement.TextContent = header;
+
+            styleBuilder.Clear();
+            builder.EndElement("div");
+            
+            builder.StartElement("div");
+            builder.CurrentElement.Attributes.Add("minheight", "100");
+
+            if (Parameters.TryGetValue("contentcolor", out string contentColor)) // TODO: Allow -, _, etc in names
+                styleBuilder.Append($"background-color:{contentColor};");
+            
+            builder.CurrentElement.Attributes.Add("style", styleBuilder.ToString());
+            
+            if (Parameters.TryGetValue("text", out var text))
+                builder.CurrentElement.TextContent = text;
+            
+            builder.EndElement("div");
+            
+            return builder.CurrentElement;
         }
 
         public override string ToString()
@@ -106,7 +142,7 @@ namespace SSED
             return new HtmlElement
             {
                 UseNewlines = false,
-                ClosingTag = "</br>"
+                ClosingTag = "br"
             };
         }
     }
@@ -130,9 +166,8 @@ namespace SSED
             return new HtmlElement
             {
                 UseNewlines = false,
-                OpeningTag = "<b>",
+                OpeningTag = "b",
                 TextContent = RawText,
-                ClosingTag = "</b>"
             };
         }
     }
@@ -143,9 +178,8 @@ namespace SSED
             return new HtmlElement
             {
                 UseNewlines = false,
-                OpeningTag = "<i>",
+                OpeningTag = "i",
                 TextContent = RawText,
-                ClosingTag = "</i>"
             };
         }
     }
@@ -156,9 +190,8 @@ namespace SSED
             return new HtmlElement
             {
                 UseNewlines = false,
-                OpeningTag = "<ins>",
+                OpeningTag = "ins",
                 TextContent = RawText,
-                ClosingTag = "</ins>"
             };
         }
     }

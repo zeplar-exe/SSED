@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace SSED
@@ -6,6 +8,7 @@ namespace SSED
     public class HtmlElement
     {
         public string OpeningTag;
+        public readonly Dictionary<string, string> Attributes = new();
         public string ClosingTag;
 
         public bool UseNewlines = true;
@@ -17,7 +20,27 @@ namespace SSED
         {
             var builder = new StringBuilder();
 
-            builder.Append(OpeningTag);
+            ClosingTag ??= OpeningTag;
+            
+            if (!string.IsNullOrEmpty(OpeningTag))
+            {
+                builder.Append('<');
+                builder.Append(OpeningTag);
+
+                foreach (var (key, value) in Attributes)
+                {
+                    builder.Append(' ');
+                    builder.Append(key);
+                    
+                    builder.Append('=');
+                    
+                    builder.Append('"');
+                    builder.Append(value);
+                    builder.Append('"');
+                }
+                
+                builder.Append('>');
+            }
 
             if (UseNewlines)
                 builder.AppendLine();
@@ -40,7 +63,12 @@ namespace SSED
                     builder.AppendLine();
             }
 
-            builder.Append(ClosingTag);
+            if (!string.IsNullOrEmpty(ClosingTag))
+            {
+                builder.Append("</");
+                builder.Append(ClosingTag);
+                builder.Append(">");
+            }
 
             return builder.ToString();
         }

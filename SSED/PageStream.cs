@@ -44,21 +44,19 @@ namespace SSED
 
         public HtmlDocument ToHtml()
         {
-            var builder = new HtmlBuilder();
+            var builder = new HtmlBuilder(new HtmlElement { OpeningTag = "html" });
             
-            builder.StartElement("<meta>");
+            builder.StartElement("meta");
 
             if (Title != null)
             {
-                builder.StartElement("<title>");
+                builder.StartElement("title");
                 builder.CurrentElement.TextContent = Title;
-                builder.EndElement("</title>");
+                builder.EndElement();
             }
 
-            builder.EndElement("</meta>");
-            
-            
-            builder.StartElement("<body>");
+            builder.EndElement("meta");
+            builder.StartElement("body");
 
             var preceding = new LinkedList<SsedElement>();
 
@@ -70,20 +68,21 @@ namespace SSED
                     {
                         if (preceding.First is null)
                         {
-                            builder.StartElement("<p>");
+                            builder.StartElement("p");
                             builder.CurrentElement.UseNewlines = false;
                         }
                         else if (preceding.First.Value is not IParagraphText)
                         {
-                            builder.EndElement();
-                            builder.StartElement("<p>");
+                            if (builder.CurrentElement.OpeningTag != "body")
+                                builder.EndElement();
+                            builder.StartElement("p");
                         }
                         
                         break;
                     }
                     default:
                     {
-                        if (builder.CurrentElement.OpeningTag != "<body>")
+                        if (builder.CurrentElement.OpeningTag != "body")
                             builder.EndElement();
 
                         break;
@@ -94,8 +93,9 @@ namespace SSED
                 preceding.AddFirst(element);
             }
             
-            builder.EndElement();
-            builder.EndElement("</body>");
+            if (builder.CurrentElement.OpeningTag != "body")
+                builder.EndElement();
+            builder.EndElement("body");
 
             return builder.ToDocument();
         }

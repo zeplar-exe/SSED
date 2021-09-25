@@ -17,7 +17,7 @@ namespace SSED
             foreach (var token in lexer)
             {
                 switch (state.Current)
-                {
+                { // TODO: Nested support
                     case ParserState.Text:
                     {
                         if (token.Is(LexerTokenId.Alphabetic) || 
@@ -27,7 +27,9 @@ namespace SSED
                             if (lexer.PeekNext().Is(LexerTokenId.Caret))
                             {
                                 state.MoveTo(ParserState.SpecialItem);
-                                stream.Elements.Add(textElement);
+                                
+                                if (!string.IsNullOrEmpty(textElement.ToString()))
+                                    stream.Elements.Add(textElement);
 
                                 textElement = new PlainText();
                                 
