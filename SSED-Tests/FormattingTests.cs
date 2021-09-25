@@ -93,8 +93,9 @@ namespace SSED_Tests
                 var important = "important text";
                 var content = $"Some B^(bold) text and some U^({important}).";
                 var testString = $"BeginContent\n{content}\nEndContent";
-
+                
                 var stream = PageParser.Parse(testString);
+                Console.WriteLine(stream.ToHtml());
                 Assert.True(stream.Content.Elements[3].GetType() == typeof(UnderlinedText));
             }
         }

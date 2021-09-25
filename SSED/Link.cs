@@ -1,5 +1,3 @@
-using System;
-
 namespace SSED
 {
     public class Link

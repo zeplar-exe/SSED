@@ -1,14 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Xml.Linq;
 using Jammo.ParserTools;
 
 namespace SSED
 {
     public class PageStream : IParserStream
     {
-        private FileStream stream;
+        private readonly FileStream stream;
 
         public bool IsInitialized => stream == null;
         public string FilePath => stream.Name;
@@ -17,7 +16,12 @@ namespace SSED
         public string Guid;
 
         public SsedDocument Content;
-        
+
+        public PageStream(FileStream stream = null)
+        {
+            this.stream = stream;
+        }
+
         public void Parse()
         {
             throw new NotImplementedException();
@@ -55,14 +59,42 @@ namespace SSED
             
             
             builder.StartElement("<body>");
-            builder.StartElement("<p>");
+
+            var preceding = new LinkedList<SsedElement>();
 
             foreach (var element in Content.Elements)
             {
+                switch (element)
+                {
+                    case IParagraphText:
+                    {
+                        if (preceding.First is null)
+                        {
+                            builder.StartElement("<p>");
+                            builder.CurrentElement.UseNewlines = false;
+                        }
+                        else if (preceding.First.Value is not IParagraphText)
+                        {
+                            builder.EndElement();
+                            builder.StartElement("<p>");
+                        }
+                        
+                        break;
+                    }
+                    default:
+                    {
+                        if (builder.CurrentElement.OpeningTag != "<body>")
+                            builder.EndElement();
+
+                        break;
+                    }
+                }
+                
                 builder.AppendElement(element.ToHtmlElement());
+                preceding.AddFirst(element);
             }
             
-            builder.EndElement("</p>");
+            builder.EndElement();
             builder.EndElement("</body>");
 
             return builder.ToDocument();

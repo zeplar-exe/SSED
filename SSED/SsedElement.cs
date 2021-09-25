@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Jammo.ParserTools;
 
 namespace SSED
@@ -106,6 +105,7 @@ namespace SSED
         {
             return new HtmlElement
             {
+                UseNewlines = false,
                 ClosingTag = "</br>"
             };
         }
@@ -113,8 +113,6 @@ namespace SSED
 
     public class PlainText : SsedElement, IParagraphText
     {
-        public string Tag => "";
-
         public override HtmlElement ToHtmlElement()
         {
             return new HtmlElement

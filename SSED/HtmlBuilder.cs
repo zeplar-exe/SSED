@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Jammo.ParserTools;
 
 namespace SSED
 {
@@ -28,6 +28,17 @@ namespace SSED
         public void EndElement(string closingTag)
         {
             CurrentElement.ClosingTag = closingTag;
+            navigator.MoveLast();
+        }
+
+        public void EndElement()
+        {
+            var index = CurrentElement.OpeningTag.IndexOf('<');
+            
+            if (index == -1)
+                return;
+            
+            CurrentElement.ClosingTag = CurrentElement.OpeningTag.Insert(index + 1, "/");
             navigator.MoveLast();
         }
 
