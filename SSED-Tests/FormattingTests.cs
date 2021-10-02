@@ -68,12 +68,11 @@ namespace SSED_Tests
             [Test]
             public void TestPlainTextContent()
             {
-                var content = "Some Text";
-                var testString = $"BeginContent\n{content}\nEndContent";
+                var content = "Some text, also, did I mention that I did x, y, AND z in the same day?";
+                var testString = $"BeginContent {content} EndContent";
 
                 var stream = PageParser.Parse(testString);
-                Console.WriteLine(stream.Content.Elements.First().ToString());
-                Assert.True(stream.Content.Elements.First().ToString().Trim() == content);
+                Assert.True(stream.Content.Elements[0].ToString().Trim() == content);
             }
 
             [Test]
@@ -81,7 +80,7 @@ namespace SSED_Tests
             {
                 var bold = "bold text";
                 var content = $"Some plain text and some B^({bold}).";
-                var testString = $"BeginContent\n{content}\nEndContent";
+                var testString = $"BeginContent {content} EndContent";
 
                 var stream = PageParser.Parse(testString);
                 Assert.True(stream.Content.Elements[1].GetType() == typeof(BoldText));
@@ -92,10 +91,9 @@ namespace SSED_Tests
             {
                 var important = "important text";
                 var content = $"Some B^(bold) text and some U^({important}).";
-                var testString = $"BeginContent\n{content}\nEndContent";
+                var testString = $"BeginContent {content} EndContent";
                 
                 var stream = PageParser.Parse(testString);
-                Console.WriteLine(stream.ToHtml());
                 Assert.True(stream.Content.Elements[3].GetType() == typeof(UnderlinedText));
             }
         }

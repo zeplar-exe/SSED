@@ -8,23 +8,23 @@ namespace SSED
 {
     public abstract class SsedElement
     {
-        protected string RawText = string.Empty;
+        protected string RawText;
 
-        internal static SsedElement FromPrefix(string prefix)
+        protected SsedElement(string rawText)
         {
-            return prefix switch
-            {
-                "B" => new BoldText(),
-                "I" => new ItalicText(),
-                "U" => new UnderlinedText(),
-                "EMB" => new Embed(),
-                _ => new PlainText()
-            };
+            RawText = rawText;
         }
-        
-        internal virtual void Feed(LexerToken token)
+
+        internal static SsedElement FromToken(ElementToken token)
         {
-            RawText += token.Token.Text;
+            return token.Prefix switch
+            {
+                "B" => new BoldText(token.Content),
+                "I" => new ItalicText(token.Content),
+                "U" => new UnderlinedText(token.Content),
+                "EMB" => new Embed(token.Content),
+                _ => new PlainText(token.Content)
+            };
         }
         
         public abstract HtmlElement ToHtmlElement();
@@ -37,58 +37,56 @@ namespace SSED
 
     public abstract class ParameterizedElement : SsedElement
     {
-        private readonly List<LexerToken> previous = new();
-        private string currentKey;
-        private bool definingParameter;
-        private bool isEscaping;
-        
         public readonly Dictionary<string, string> Parameters = new();
-
-        internal override void Feed(LexerToken token)
+        
+        protected ParameterizedElement(string rawText) : base(rawText)
         {
-            if (token.Is(LexerTokenId.Backslash))
-            {
-                isEscaping = !isEscaping;
-            }
+            var lexer = new Lexer(rawText);
+            var preceding = new LinkedList<LexerToken>();
             
-            if (token.ToString() == "=")
+            foreach (var token in lexer)
             {
-                var last = previous.LastOrDefault();
-                
-                if (last is not { Id: LexerTokenId.Alphabetic })
-                    return;
-
-                currentKey = last.Token.Text;
-                
-                Parameters[currentKey] = string.Empty;
-            }
-            else if (currentKey != null)
-            {
-                if (token.Is(LexerTokenId.DoubleQuote))
+                if (token.Is(LexerTokenId.Equals) && preceding.Any())
                 {
-                    if (!isEscaping)
+                    if (!lexer.PeekNext().Is(LexerTokenId.DoubleQuote))
+                        continue;
+                    
+                    lexer.Skip();
+                    
+                    if (lexer.PeekNext().Is(LexerTokenId.Space)) // TODO: Fix this bug
+                        lexer.SkipWhile(t => t.Is(LexerTokenId.Space));
+                    
+                    var key = preceding.First.Value.RawToken;
+
+                    Parameters[key] = string.Empty;
+
+                    foreach (var valueToken in lexer)
                     {
-                        definingParameter = !definingParameter;
+                        if (valueToken.Is(LexerTokenId.DoubleQuote) && 
+                            !(preceding.First?.Value.Is(LexerTokenId.Backslash) ?? false))
+                            break;
                         
-                        return;
+                        Parameters[key] += valueToken;
+
+                        preceding.AddFirst(valueToken);
                     }
                 }
 
-                if (definingParameter)
-                    Parameters[currentKey] += token.ToString();
+                preceding.AddFirst(token);
             }
-
-            isEscaping = false;
-            
-            previous.Add(token);
         }
-        
+
         public abstract override HtmlElement ToHtmlElement();
         public abstract override string ToString();
     }
 
     public class Embed : ParameterizedElement
     {
+        public Embed(string rawText) : base(rawText)
+        {
+            
+        }
+        
         public override HtmlElement ToHtmlElement()
         {
             var builder = new HtmlBuilder(new HtmlElement { OpeningTag = "div" });
@@ -100,7 +98,7 @@ namespace SSED
             var styleBuilder = new StringBuilder();
             // TODO: Create Style and StyleBuilder, grab styles using recursion
 
-            if (Parameters.TryGetValue("headercolor", out string headerColor))
+            if (Parameters.TryGetValue("headercolor", out var headerColor))
                 styleBuilder.Append($"background-color:{headerColor};");
 
             styleBuilder.Append("margin:10;");
@@ -131,7 +129,19 @@ namespace SSED
 
         public override string ToString()
         {
-            throw new NotImplementedException();
+            var builder = new StringBuilder();
+
+            foreach (var param in Parameters)
+            {
+                builder.Append('{');
+                builder.Append(param.Key);
+                builder.Append(", ");
+                builder.AppendLine(param.Value);
+                builder.Append('}');
+                builder.Append(", ");
+            }
+            
+            return builder.ToString();
         }
     }
     
@@ -145,6 +155,11 @@ namespace SSED
                 ClosingTag = "br"
             };
         }
+
+        public LineBreak(string rawText) : base(rawText)
+        {
+            
+        }
     }
 
     public class PlainText : SsedElement, IParagraphText
@@ -156,6 +171,11 @@ namespace SSED
                 UseNewlines = false,
                 TextContent = RawText
             };
+        }
+
+        public PlainText(string rawText) : base(rawText)
+        {
+            
         }
     }
     
@@ -170,6 +190,11 @@ namespace SSED
                 TextContent = RawText,
             };
         }
+
+        public BoldText(string rawText) : base(rawText)
+        {
+            
+        }
     }
     public class ItalicText : SsedElement, IParagraphText
     {
@@ -182,6 +207,11 @@ namespace SSED
                 TextContent = RawText,
             };
         }
+
+        public ItalicText(string rawText) : base(rawText)
+        {
+            
+        }
     }
     public class UnderlinedText : SsedElement, IParagraphText
     {
@@ -193,6 +223,11 @@ namespace SSED
                 OpeningTag = "ins",
                 TextContent = RawText,
             };
+        }
+
+        public UnderlinedText(string rawText) : base(rawText)
+        {
+            
         }
     }
 }

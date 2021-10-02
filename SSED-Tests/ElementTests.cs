@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using NUnit.Framework;
 using SSED;
 
@@ -13,7 +15,7 @@ namespace SSED_Tests
             var testString = $"BeginContent EMB^({properties}) EndContent";
 
             var stream = PageParser.Parse(testString);
-            Assert.True(((ParameterizedElement)stream.Content.Elements[1]).Parameters["property"] == "value");
+            Assert.True(((ParameterizedElement)stream.Content.Elements.First()).Parameters["property"] == "value");
         }
     }
 }

@@ -1,122 +1,61 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Jammo.ParserTools;
 
 namespace SSED
 {
-    public class SsedParser
+    public static partial class SsedParser
     {
         public static SsedDocument Parse(string input)
         {
             var stream = new SsedDocument();
-            var state = new StateMachine<ParserState>(ParserState.Text);
-            var lexer = new Lexer(new Tokenizer(input));
-            var preceding = new LinkedList<LexerToken>();
-
-            SsedElement textElement = new PlainText();
-
-            foreach (var token in lexer)
+            var text = string.Empty;
+            
+            foreach (var token in Lex(input))
             {
-                switch (state.Current)
-                { // TODO: Nested support
-                    case ParserState.Text:
+                Console.WriteLine(token.Id);
+                Console.WriteLine(token.ToString());
+                switch (token.Id)
+                {
+                    case SsedTokenId.Text:
+                    case SsedTokenId.Whitespace:
                     {
-                        if (token.Is(LexerTokenId.Alphabetic) || 
-                            token.Is(LexerTokenId.AlphaNumeric) ||
-                            token.Is(LexerTokenId.Numeric))
-                        {
-                            if (lexer.PeekNext().Is(LexerTokenId.Caret))
-                            {
-                                state.MoveTo(ParserState.SpecialItem);
-                                
-                                if (!string.IsNullOrEmpty(textElement.ToString()))
-                                    stream.Elements.Add(textElement);
-
-                                textElement = new PlainText();
-                                
-                                break;
-                            }
-                        }
-
-                        if (token.Is(LexerTokenId.NewLine))
-                        {
-                            stream.Elements.Add(textElement);
-                            stream.Elements.Add(new LineBreak());
-
-                            textElement = new PlainText();
-                                
-                            break;
-                        }
-
-                        textElement.Feed(token);
+                        text += token.ToString();
                         
                         break;
                     }
-                    case ParserState.SpecialItem:
+                    case SsedTokenId.Element when token is ElementToken special:
                     {
-                        var prefix = preceding.First?.Value.Token.Text;
-
-                        if (prefix == null)
+                        if (!string.IsNullOrEmpty(text))
                         {
-                            state.MoveLast();
-                            break;
-                        }
-
-                        if (!lexer.Next().Is(LexerTokenId.LeftParenthesis))
-                        {
-                            state.MoveLast();
-                            break;
-                        }
-
-                        var element = SsedElement.FromPrefix(prefix);
-
-                        var isEscaping = false;
-                        foreach (var specialToken in lexer)
-                        {
-                            if (specialToken.Is(LexerTokenId.Backslash))
-                            {
-                                if (isEscaping)
-                                {
-                                    element.Feed(specialToken);
-                                    isEscaping = false;
-                                }
-                                else
-                                {
-                                    isEscaping = true;
-                                }
-                            }
-                            else
-                            {
-                                if (specialToken.Is(LexerTokenId.RightParenthesis) && !isEscaping)
-                                {
-                                    state.MoveLast();
-                                    break;
-                                }
-                                
-                                isEscaping = false;
-
-                                element.Feed(specialToken);
-                            }
+                            stream.Elements.Add(new PlainText(text));
+                            text = string.Empty;
                         }
                         
-                        stream.Elements.Add(element);
+                        stream.Elements.Add(SsedElement.FromToken(special));
+                        
+                        break;
+                    }
+                    case SsedTokenId.Newline:
+                    {
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            stream.Elements.Add(new PlainText(text));
+                            text = string.Empty;
+                        }
+                        
+                        stream.Elements.Add(new LineBreak(token.ToString()));
                         
                         break;
                     }
                 }
-                
-                preceding.AddFirst(token);
             }
             
-            if (!string.IsNullOrEmpty(textElement.ToString()))
-                stream.Elements.Add(textElement);
-            
-            return stream;
-        }
+            if (!string.IsNullOrEmpty(text))
+                stream.Elements.Add(new PlainText(text));
 
-        private enum ParserState
-        {
-            Text,
-            SpecialItem
+            return stream;
         }
     }
 }
