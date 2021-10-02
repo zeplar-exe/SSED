@@ -12,7 +12,7 @@ namespace SSED_Cli
 
             if (!info.Exists)
             {
-                Console.WriteLine($"The file {info.Name} does not exist.");
+                Console.WriteLine($"The file '{info.Name}' does not exist.");
                 return;
             }
             
@@ -20,10 +20,21 @@ namespace SSED_Cli
             using var reader = new StreamReader(file);
 
             var page = PageParser.Parse(reader.ReadToEndAsync().Result);
+            var fileName = Path.GetFileNameWithoutExtension(args[0]) + ".html";
 
-            File.WriteAllText(
-                Path.Join(Directory.GetCurrentDirectory(), Path.GetFileNameWithoutExtension(args[0]) + ".html"),
-                page.ToHtml().ToString());
+            try
+            {
+                File.WriteAllText(
+                    Path.Join(Directory.GetCurrentDirectory(), fileName), page.ToHtml().ToString());
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine($"Failed to write to '{fileName}'.");
+                Console.WriteLine();
+                Console.WriteLine(e.Message);
+            }
+
+            Console.WriteLine($"Successfully wrote to '{fileName}'.");
         }
     }
 }

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Jammo.ParserTools;
-
 namespace SSED
 {
     public static partial class SsedParser
@@ -14,8 +9,6 @@ namespace SSED
             
             foreach (var token in Lex(input))
             {
-                Console.WriteLine(token.Id);
-                Console.WriteLine(token.ToString());
                 switch (token.Id)
                 {
                     case SsedTokenId.Text:

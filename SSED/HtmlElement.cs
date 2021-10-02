@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace SSED
@@ -16,12 +15,12 @@ namespace SSED
         public string TextContent;
         public readonly List<HtmlElement> Content = new();
 
-        public string ToHtml()
+        public string ToHtml(int indentLevel = 0)
         {
             var builder = new StringBuilder();
 
             ClosingTag ??= OpeningTag;
-            
+
             if (!string.IsNullOrEmpty(OpeningTag))
             {
                 builder.Append('<');
@@ -31,14 +30,14 @@ namespace SSED
                 {
                     builder.Append(' ');
                     builder.Append(key);
-                    
+
                     builder.Append('=');
-                    
+
                     builder.Append('"');
                     builder.Append(value);
                     builder.Append('"');
                 }
-                
+
                 builder.Append('>');
             }
 
@@ -49,7 +48,10 @@ namespace SSED
             {
                 foreach (var element in Content)
                 {
-                    builder.Append(element.ToHtml());
+                    var html = element.ToHtml(indentLevel + 1);
+
+                    foreach (var line in html.Split(Environment.NewLine))
+                        builder.Append(UseNewlines ? Indent(indentLevel, line) : line);
 
                     if (UseNewlines)
                         builder.AppendLine();
@@ -57,8 +59,8 @@ namespace SSED
             }
             else
             {
-                builder.Append(TextContent);
-                
+                builder.Append(UseNewlines ? Indent(indentLevel, TextContent) : TextContent);
+
                 if (UseNewlines)
                     builder.AppendLine();
             }
@@ -71,6 +73,12 @@ namespace SSED
             }
 
             return builder.ToString();
+        }
+
+        private string Indent(int count, string text)
+        {
+            return text; // TODO: Fix inconsistent HTML newlines
+            // return string.Concat(string.Concat(Enumerable.Repeat('\t', count)), text);
         }
     }
 }
