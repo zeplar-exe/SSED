@@ -6,6 +6,8 @@ namespace SSED
 {
     public class HtmlElement
     {
+        public readonly StyleBuilder Style = new();
+        
         public string OpeningTag;
         public readonly Dictionary<string, string> Attributes = new();
         public string ClosingTag;
@@ -25,6 +27,8 @@ namespace SSED
             {
                 builder.Append('<');
                 builder.Append(OpeningTag);
+
+                Attributes["style"] = Style.ToString();
 
                 foreach (var (key, value) in Attributes)
                 {

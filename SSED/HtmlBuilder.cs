@@ -24,6 +24,11 @@ namespace SSED
             navigator.MoveTo(element);
         }
 
+        public void AppendStyle(string id, string value)
+        {
+            CurrentElement?.Style.Append(id, value);
+        }
+
         public void EndElement(string closingTag)
         {
             CurrentElement.ClosingTag = closingTag;

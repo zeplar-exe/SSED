@@ -1,5 +1,5 @@
 BeginContent
-EMB^(header="Interesting title" text="Hello world!" headercolor="yellow" contentcolor="yellow")
+EMB^(header="Interesting title" text="Hello world!" header-color="yellow" content-color="yellow")
 Did you know that the mona lisa is... I dunno, a picture?
 B^(BOLD TEXT FTW)
 EndContent
